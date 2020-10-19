@@ -1,0 +1,15 @@
+version: "3.7"
+services:
+    api:
+        image: jeffrygonzalez/libraryapi:latest
+        depends_on: 
+            - sql
+        ports: 
+            - 80:80
+        environment:
+            - message="Hello From Docker!"
+            - ConnectionStrings__library=server=sql;database=books_prod;user=sa;password=TokyoJoe138!
+    sql:
+        image: jeffrygonzalez/librarysql:latest
+        ports: 
+            - 1433:1433
