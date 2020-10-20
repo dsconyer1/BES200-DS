@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using AutoMapper;
 using LibraryApi.Domain;
@@ -31,7 +32,12 @@ namespace LibraryApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
+            services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.IgnoreNullValues = true;
+                    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                });
             services.AddTransient<ISystemTime, SystemTime>(); // create a brand new instance any time it's needed.
             // services.AddScoped<ISystemTime, SystemTime>(); // create exactly one of these PER REQUEST.
             // services.AddSingleton<ISystemTime, SystemTime>(); // Create exactly one of these and share it like a cheap bottle of wine with anybody that needs it.
@@ -44,6 +50,7 @@ namespace LibraryApi
             var mapperConfig = new MapperConfiguration(opt =>
             {
                 opt.AddProfile<BooksProfile>();
+                opt.AddProfile<ReservationsProfile>();
             });
 
             IMapper mapper = mapperConfig.CreateMapper();
@@ -53,6 +60,12 @@ namespace LibraryApi
 
             services.AddScoped<IQueryForBooks, EfLibraryData>();
             services.AddScoped<IDoBookCommands, EfLibraryData>();
+
+            services.AddDistributedRedisCache(options =>
+            {
+                options.Configuration = Configuration.GetConnectionString("redis");
+            });
+            services.AddTransient<ICacheTheCatalog, CatalogService>();
 
             services.AddSwaggerGen(c => {
                 c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo

@@ -13,6 +13,7 @@ namespace LibraryApi.Domain
 
         }
         public virtual DbSet<Book> Books { get; set; }
+        public virtual DbSet<Reservation> Reservations { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
